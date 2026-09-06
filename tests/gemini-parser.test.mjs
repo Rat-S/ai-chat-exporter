@@ -52,8 +52,8 @@ test('GeminiParser correctly parses chat content from fixture', async () => {
       '| India | ~$3,000 | 48 | 15 | ~10% |\n' +
       '| Pakistan | ~$1,500 | 48 | 14 | ~5% |\n' +
       '| Nigeria | ~$1,800 | 40 | 15 | ~12% |\n\n' +
-      '> *Note: Wage and union figures are approximate global estimates and can vary based on specific industries and current exchange rates.*\n\n' +
-      '$$e^{i\\\\pi} + 1 = 0$$',
+      '> *Note: Wage and union figures are approximate global estimates and can vary based on specific industries and current exchange rates.*\n\n\n\n' +
+      '$$e^{i\\pi} + 1 = 0$$',
   );
 });
 
@@ -155,7 +155,7 @@ test('GeminiParser parses real multi-turn conversation from fixture', async () =
   assert.equal(result.messages[5].role, 'Model');
   assert.ok(result.messages[5].content.includes('| Language | Native Script |'));
   assert.equal(result.messages[7].role, 'Model');
-  assert.ok(result.messages[7].content.includes('$$e^{i\\\\pi} + 1 = 0$$'));
+  assert.ok(result.messages[7].content.includes('$$e^{i\\pi} + 1 = 0$$'));
 });
 
 test('GeminiParser rejects API response when it contains conversation IDs and falls back to DOM', async () => {

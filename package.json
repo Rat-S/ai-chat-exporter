@@ -23,7 +23,7 @@
     "wxt": "^0.21.3"
   },
   "dependencies": {
-    "decant-core": "^1.2.2",
+    "decant-core": "^1.2.3",
     "dompurify": "^3.4.13",
     "html2canvas": "^1.4.1",
     "katex": "^0.18.2",

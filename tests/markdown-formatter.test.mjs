@@ -96,3 +96,47 @@ And inline \`item[0]\` code.`,
   assert.ok(output.includes('return [x]'));
   assert.ok(output.includes('`item[0]`'));
 });
+
+test('MarkdownFormatter preserves math formulas with brackets and does not split into extra $$', () => {
+  const formatter = new MarkdownFormatter();
+
+  const conversation = {
+    title: 'Statistics Math Test',
+    messages: [
+      {
+        role: 'Model',
+        content:
+          'Formula with brackets:\n' +
+          '$$\\text{ATE} = \\mathbb{E}[Y \\vert \\text{do}(X=1)] - \\mathbb{E}[Y \\vert \\text{do}(X=0)]$$\n\n' +
+          'Formula with sizing brackets:\n' +
+          '$$\\left[ \\frac{a}{b} \\right] = 1$$\n\n' +
+          'Formula with previously escaped backslashes and underscores:\n' +
+          '$$\\\\text{Cov}(R\\_a, R\\_m) = \\\\rho \\\\cdot \\\\sigma\\_a \\\\cdot \\\\sigma\\_m$$\n\n' +
+          'Inline formula in table text: $\\\\beta = \\\\rho \\\\cdot \\\\frac{\\\\sigma\\_a}{\\\\sigma\\_m}$',
+      },
+    ],
+  };
+
+  const output = formatter.format(conversation);
+
+  // Verifies formula with brackets is not split into extra $$
+  assert.ok(
+    output.includes(
+      '$$\\text{ATE} = \\mathbb{E}[Y \\vert \\text{do}(X=1)] - \\mathbb{E}[Y \\vert \\text{do}(X=0)]$$',
+    ),
+  );
+  assert.ok(!output.includes('$$\\text{ATE} = \\mathbb{E}$$'));
+
+  // Verifies sizing brackets are intact
+  assert.ok(output.includes('$$\\left[ \\frac{a}{b} \\right] = 1$$'));
+  assert.ok(!output.includes('\\left$$'));
+
+  // Verifies double backslashes and escaped underscores are cleaned
+  assert.ok(output.includes('$$\\text{Cov}(R_a, R_m) = \\rho \\cdot \\sigma_a \\cdot \\sigma_m$$'));
+  assert.ok(!output.includes('\\\\text{Cov}'));
+  assert.ok(!output.includes('R\\_a'));
+
+  // Verifies inline math is cleaned
+  assert.ok(output.includes('$\\beta = \\rho \\cdot \\frac{\\sigma_a}{\\sigma_m}$'));
+  assert.ok(!output.includes('\\\\beta'));
+});

@@ -35,5 +35,5 @@ test('ZAiParser correctly extracts user and assistant messages', async () => {
   assert.match(result.messages[1].content, /IO\.puts\("Hello, World!"\)/);
   assert.match(result.messages[1].content, /\| Country \|/);
   assert.match(result.messages[1].content, /Denmark/);
-  assert.match(result.messages[1].content, /\$e\^\{i\\\\pi\} \+ 1 = 0\$/);
+  assert.match(result.messages[1].content, /\$e\^\{i\\pi\} \+ 1 = 0\$/);
 });

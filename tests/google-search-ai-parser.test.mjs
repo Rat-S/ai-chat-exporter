@@ -53,7 +53,9 @@ test('GoogleSearchAIParser correctly parses chat content from fixture', async ()
       '\n' +
       "Finally, here is Euler's Identity, often cited as one of the most beautiful equations in mathematics:\n" +
       '\n' +
-      '$$e^{i\\\\pi }+1=0$$',
+      '\n' +
+      '\n' +
+      '$$e^{i\\pi }+1=0$$',
   );
 });
 
