@@ -25,7 +25,11 @@ import { HtmlFormatter } from '../content/formatters/html.js';
 import { ImageFormatter } from '../content/formatters/image.js';
 import { ContinuationFormatter } from '../content/formatters/continuation.js';
 import { DocFormatter } from '../content/formatters/doc.js';
-import { formatFilename, DEFAULT_FILENAME_TEMPLATE } from '../content/utils/filename.js';
+import {
+  formatFilename,
+  resolveConversationTitle,
+  DEFAULT_FILENAME_TEMPLATE,
+} from '../content/utils/filename.js';
 import { createLogger } from '../content/utils/logger.js';
 
 const logger = createLogger('ContentScript');
@@ -39,6 +43,20 @@ export default defineContentScript({
     logger.debug(`Script initialized on: ${window.location.href} (isTopFrame: ${isTopFrame})`);
 
     const continuationFormatter = new ContinuationFormatter();
+
+    function enrichConversation(conversation) {
+      if (!conversation) return conversation;
+      const platformName =
+        typeof activeParser?.getPlatformName === 'function'
+          ? activeParser.getPlatformName()
+          : activeParser?.name || activeParser?.constructor?.name?.replace('Parser', '') || 'AI';
+      conversation.title = resolveConversationTitle(
+        conversation.title,
+        platformName,
+        typeof document !== 'undefined' ? document : null,
+      );
+      return conversation;
+    }
 
     async function checkAndInjectContinuation() {
       try {
@@ -182,7 +200,7 @@ export default defineContentScript({
             (async () => {
               try {
                 logger.debug('Executing activeParser.parse({ full: false })...');
-                const conversation = await activeParser.parse({ full: false });
+                const conversation = enrichConversation(await activeParser.parse({ full: false }));
                 logger.debug(
                   `Availability check parsed ${conversation.messages.length} messages, title: "${conversation.title || ''}"`,
                 );
@@ -242,11 +260,13 @@ export default defineContentScript({
 
           (async () => {
             try {
-              const conversation = await activeParser.parse({
-                full: true,
-                parserMode: request.parserMode || 'auto',
-                includeImages: request.includeImages !== false,
-              });
+              const conversation = enrichConversation(
+                await activeParser.parse({
+                  full: true,
+                  parserMode: request.parserMode || 'auto',
+                  includeImages: request.includeImages !== false,
+                }),
+              );
               if (
                 !currentFrameIsTop &&
                 (!conversation || !conversation.messages || conversation.messages.length === 0)
@@ -345,11 +365,13 @@ export default defineContentScript({
 
           (async () => {
             try {
-              const conversation = await activeParser.parse({
-                full: true,
-                parserMode: request.parserMode || 'auto',
-                includeImages: request.includeImages !== false,
-              });
+              const conversation = enrichConversation(
+                await activeParser.parse({
+                  full: true,
+                  parserMode: request.parserMode || 'auto',
+                  includeImages: request.includeImages !== false,
+                }),
+              );
               if (
                 !currentFrameIsTop &&
                 (!conversation || !conversation.messages || conversation.messages.length === 0)
@@ -399,11 +421,13 @@ export default defineContentScript({
 
           (async () => {
             try {
-              const conversation = await activeParser.parse({
-                full: true,
-                parserMode: request.parserMode || 'auto',
-                includeImages: request.includeImages !== false,
-              });
+              const conversation = enrichConversation(
+                await activeParser.parse({
+                  full: true,
+                  parserMode: request.parserMode || 'auto',
+                  includeImages: request.includeImages !== false,
+                }),
+              );
               if (
                 !currentFrameIsTop &&
                 (!conversation || !conversation.messages || conversation.messages.length === 0)
@@ -453,11 +477,13 @@ export default defineContentScript({
 
           (async () => {
             try {
-              const conversation = await activeParser.parse({
-                full: true,
-                parserMode: 'auto',
-                includeImages: true,
-              });
+              const conversation = enrichConversation(
+                await activeParser.parse({
+                  full: true,
+                  parserMode: 'auto',
+                  includeImages: true,
+                }),
+              );
 
               if (!conversation || !conversation.messages || conversation.messages.length === 0) {
                 if (isTopFrame) {

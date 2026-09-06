@@ -26,7 +26,11 @@ import { HtmlFormatter } from './formatters/html.js';
 import { ImageFormatter } from './formatters/image.js';
 import { ContinuationFormatter } from './formatters/continuation.js';
 import { DocFormatter } from './formatters/doc.js';
-import { formatFilename, DEFAULT_FILENAME_TEMPLATE } from './utils/filename.js';
+import {
+  formatFilename,
+  resolveConversationTitle,
+  DEFAULT_FILENAME_TEMPLATE,
+} from './utils/filename.js';
 import { createLogger } from './utils/logger.js';
 
 const logger = createLogger('ContentScript');
@@ -35,6 +39,20 @@ const isTopFrame = typeof window === 'undefined' || window.self === window.top;
 logger.debug(`Script initialized on: ${window.location.href} (isTopFrame: ${isTopFrame})`);
 
 const continuationFormatter = new ContinuationFormatter();
+
+function enrichConversation(conversation) {
+  if (!conversation) return conversation;
+  const platformName =
+    typeof activeParser?.getPlatformName === 'function'
+      ? activeParser.getPlatformName()
+      : activeParser?.name || activeParser?.constructor?.name?.replace('Parser', '') || 'AI';
+  conversation.title = resolveConversationTitle(
+    conversation.title,
+    platformName,
+    typeof document !== 'undefined' ? document : null,
+  );
+  return conversation;
+}
 
 async function checkAndInjectContinuation() {
   try {
@@ -189,7 +207,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
         (async () => {
           try {
             logger.debug('Executing activeParser.parse({ full: false })...');
-            const conversation = await activeParser.parse({ full: false });
+            const conversation = enrichConversation(await activeParser.parse({ full: false }));
             logger.debug(
               `Availability check parsed ${conversation.messages.length} messages, title: "${conversation.title || ''}"`,
             );
@@ -249,11 +267,13 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
       (async () => {
         try {
-          const conversation = await activeParser.parse({
-            full: true,
-            parserMode: request.parserMode || 'auto',
-            includeImages: request.includeImages !== false,
-          });
+          const conversation = enrichConversation(
+            await activeParser.parse({
+              full: true,
+              parserMode: request.parserMode || 'auto',
+              includeImages: request.includeImages !== false,
+            }),
+          );
           if (request.includeImages === false) {
             conversation.messages.forEach((msg) => {
               if (msg.content) {
@@ -344,11 +364,13 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
       (async () => {
         try {
-          const conversation = await activeParser.parse({
-            full: true,
-            parserMode: request.parserMode || 'auto',
-            includeImages: request.includeImages !== false,
-          });
+          const conversation = enrichConversation(
+            await activeParser.parse({
+              full: true,
+              parserMode: request.parserMode || 'auto',
+              includeImages: request.includeImages !== false,
+            }),
+          );
           if (request.includeImages === false) {
             conversation.messages.forEach((msg) => {
               if (msg.content) {
@@ -386,11 +408,13 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
       (async () => {
         try {
-          const conversation = await activeParser.parse({
-            full: true,
-            parserMode: request.parserMode || 'auto',
-            includeImages: request.includeImages !== false,
-          });
+          const conversation = enrichConversation(
+            await activeParser.parse({
+              full: true,
+              parserMode: request.parserMode || 'auto',
+              includeImages: request.includeImages !== false,
+            }),
+          );
           if (request.includeImages === false) {
             conversation.messages.forEach((msg) => {
               if (msg.content) {
@@ -431,11 +455,13 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
 
       (async () => {
         try {
-          const conversation = await activeParser.parse({
-            full: true,
-            parserMode: 'auto',
-            includeImages: true,
-          });
+          const conversation = enrichConversation(
+            await activeParser.parse({
+              full: true,
+              parserMode: 'auto',
+              includeImages: true,
+            }),
+          );
 
           if (!conversation || !conversation.messages || conversation.messages.length === 0) {
             if (isTopFrame) {

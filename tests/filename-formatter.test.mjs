@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { formatFilename, DEFAULT_FILENAME_TEMPLATE } from '../content/utils/filename.js';
+import {
+  formatFilename,
+  DEFAULT_FILENAME_TEMPLATE,
+  cleanPageTitle,
+  isGenericTitle,
+  resolveConversationTitle,
+} from '../content/utils/filename.js';
 
 test('DEFAULT_FILENAME_TEMPLATE is configured with platform, title, and datetime', () => {
   assert.equal(DEFAULT_FILENAME_TEMPLATE, '{platform} - {title} - {datetime}');
@@ -72,4 +78,88 @@ test('formatFilename handles empty or missing inputs gracefully', () => {
     date: fixedDate,
   });
   assert.equal(emptyTemplateResult, 'Claude - My Chat - 2026-08-19_10-00');
+});
+
+test('cleanPageTitle strips platform brands, prefixes, and suffixes correctly', () => {
+  assert.equal(
+    cleanPageTitle('Google Gemini - Comparing Markdown and PDF', 'Gemini'),
+    'Comparing Markdown and PDF',
+  );
+  assert.equal(
+    cleanPageTitle('Comparing Markdown and PDF - Gemini', 'Gemini'),
+    'Comparing Markdown and PDF',
+  );
+  assert.equal(
+    cleanPageTitle('Comparing Markdown and PDF | Perplexity', 'Perplexity'),
+    'Comparing Markdown and PDF',
+  );
+  assert.equal(
+    cleanPageTitle('ChatGPT - React Design Patterns', 'ChatGPT'),
+    'React Design Patterns',
+  );
+  assert.equal(
+    cleanPageTitle('Comparing Markdown and PDF - Le Chat', 'Mistral'),
+    'Comparing Markdown and PDF',
+  );
+  assert.equal(cleanPageTitle('Google Gemini', 'Gemini'), '');
+  assert.equal(cleanPageTitle('ChatGPT', 'ChatGPT'), '');
+  assert.equal(cleanPageTitle('', 'Claude'), '');
+});
+
+test('isGenericTitle detects placeholder and platform titles', () => {
+  assert.equal(isGenericTitle(''), true);
+  assert.equal(isGenericTitle('Conversation'), true);
+  assert.equal(isGenericTitle('Gemini Conversation', 'Gemini'), true);
+  assert.equal(isGenericTitle('New chat', 'ChatGPT'), true);
+  assert.equal(isGenericTitle('ChatGPT', 'ChatGPT'), true);
+  assert.equal(isGenericTitle('Untitled Chat'), true);
+  assert.equal(isGenericTitle('Comparing Markdown and PDF', 'Gemini'), false);
+  assert.equal(isGenericTitle('DeepSeek Reasoning Trace', 'DeepSeek'), false);
+});
+
+test('resolveConversationTitle falls back to HTML head title when parser title is generic', () => {
+  const mockDoc = {
+    querySelector: (selector) => {
+      if (selector === 'title') {
+        return { textContent: 'Comparing Markdown and PDF - Google Gemini' };
+      }
+      return null;
+    },
+    title: 'Comparing Markdown and PDF - Google Gemini',
+  };
+
+  // When conversation title is generic, fallback to cleaned <title>
+  const fallbackResult = resolveConversationTitle('Gemini Conversation', 'Gemini', mockDoc);
+  assert.equal(fallbackResult, 'Comparing Markdown and PDF');
+
+  // When conversation title is empty, fallback to cleaned <title>
+  const emptyResult = resolveConversationTitle('', 'Gemini', mockDoc);
+  assert.equal(emptyResult, 'Comparing Markdown and PDF');
+
+  // When conversation title is already meaningful, keep it
+  const explicitResult = resolveConversationTitle('Explicit Title', 'Gemini', mockDoc);
+  assert.equal(explicitResult, 'Explicit Title');
+
+  // When mockDoc has generic title as well, fallback to default
+  const genericDoc = {
+    title: 'Google Gemini',
+  };
+  const defaultFallback = resolveConversationTitle('Gemini Conversation', 'Gemini', genericDoc);
+  assert.equal(defaultFallback, 'Gemini Conversation');
+});
+
+test('formatFilename uses HTML head title fallback when doc is provided and title is generic', () => {
+  const fixedDate = new Date(2026, 7, 19, 10, 0);
+  const mockDoc = {
+    title: 'Google Gemini - Comparing Markdown and PDF',
+  };
+
+  const result = formatFilename(DEFAULT_FILENAME_TEMPLATE, {
+    platform: 'Gemini',
+    title: 'Gemini Conversation',
+    date: fixedDate,
+    doc: mockDoc,
+  });
+
+  assert.equal(result, 'Gemini - Comparing Markdown and PDF - 2026-08-19_10-00');
 });

@@ -6,7 +6,11 @@ import { ImageFormatter } from '../content/formatters/image.js';
 import { ContinuationFormatter, stripEncodedImages } from '../content/formatters/continuation.js';
 import { sanitizeHtml } from '../content/utils/sanitizer.js';
 import { initI18n, applyI18n, t } from '../content/utils/i18n.js';
-import { formatFilename, DEFAULT_FILENAME_TEMPLATE } from '../content/utils/filename.js';
+import {
+  formatFilename,
+  resolveConversationTitle,
+  DEFAULT_FILENAME_TEMPLATE,
+} from '../content/utils/filename.js';
 
 function applyTheme(theme, targetDoc = document) {
   if (!targetDoc || !targetDoc.documentElement) return;
@@ -450,9 +454,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Fallback to default
       }
       const platform = conversation?.metadata?.Source || 'AI';
+      const displayTitle = resolveConversationTitle(
+        conversation?.title || title,
+        platform,
+        typeof document !== 'undefined' ? document : null,
+      );
       downloadBaseName = formatFilename(filenameTemplate, {
         platform,
-        title: conversation?.title || title || 'Conversation',
+        title: displayTitle,
       });
     }
 

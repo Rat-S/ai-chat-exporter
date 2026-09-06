@@ -9,7 +9,11 @@ import {
 } from '../../content/formatters/continuation.js';
 import { sanitizeHtml } from '../../content/utils/sanitizer.js';
 import { initI18n, applyI18n, t } from '../../content/utils/i18n.js';
-import { formatFilename, DEFAULT_FILENAME_TEMPLATE } from '../../content/utils/filename.js';
+import {
+  formatFilename,
+  resolveConversationTitle,
+  DEFAULT_FILENAME_TEMPLATE,
+} from '../../content/utils/filename.js';
 import renderMathInElement from 'katex/dist/contrib/auto-render.mjs';
 import Prism from '../../content/lib/prismjs/prism-bundle.js';
 
@@ -689,7 +693,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const platform = conversation?.metadata?.Source || 'AI';
-    const displayTitle = conversation?.title || title || 'Conversation';
+    const displayTitle = resolveConversationTitle(
+      conversation?.title || title,
+      platform,
+      typeof document !== 'undefined' ? document : null,
+    );
     const computedDefaultFilename = formatFilename(filenameTemplate, {
       platform,
       title: displayTitle,

@@ -1,5 +1,9 @@
 import { initI18n, applyI18n, t } from '../../content/utils/i18n.js';
-import { formatFilename, DEFAULT_FILENAME_TEMPLATE } from '../../content/utils/filename.js';
+import {
+  formatFilename,
+  resolveConversationTitle,
+  DEFAULT_FILENAME_TEMPLATE,
+} from '../../content/utils/filename.js';
 import { createLogger } from '../../content/utils/logger.js';
 
 const logger = createLogger('Popup');
@@ -171,7 +175,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             `Successfully connected to platform: ${response.platform} with ${response.count} messages`,
           );
           statusEl.textContent = `${t('statusReady') || 'Ready'}: ${response.platform}`;
-          const displayTitle = response.title || tab.title || 'Untitled Chat';
+          const platformName = response.platform || 'AI';
+          const displayTitle = resolveConversationTitle(response.title, platformName, {
+            title: tab.title,
+          });
           chatTitleEl.textContent = displayTitle;
           const count = response.count || 0;
           msgCountEl.textContent = t('messagesFound', count) || `${count} messages found`;
