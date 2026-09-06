@@ -8,3 +8,8 @@ public/
 *.log
 tests/fixtures/
 Scratch/
+.opencode/
+coverage/
+.nyc_output/
+publish/
+web-ext-artifacts/

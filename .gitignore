@@ -1,15 +1,59 @@
-releases/
+# Dependencies
+node_modules/
+
+# Build and distribution outputs
 dist/
 .output/
 .wxt/
-*.log
-node_modules/
-internal/
+releases/
 publish/
-/.worktrees
+web-ext-artifacts/
+*.zip
+*.crx
+*.xpi
 
-*.env 
-Scratch/ 
+# Environment & local configurations
+.env
 .env*
+*.env
 
+# Local scratch and notes
+Scratch/
+/.worktrees
 .opencode/
+internal/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Editor & IDE directories
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
